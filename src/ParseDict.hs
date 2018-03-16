@@ -25,6 +25,7 @@ initDict path = case path of
                       pwd <- getCurrentDirectory
                       let dictPath = takeDirectory pwd </> "dict" </> "cmudict-0.7b.txt"
                       dict <- T.readFile dictPath
+                      --mapM_ T.putStrLn $ filter ((==[]) . readP_to_S parseLine . T.unpack) . filter ((/=';') . T.head) . T.lines $ dict
                       return $ parseDict dict
                       
 -- | Go through all the entries in the dictionary, parsing, and inserting into
@@ -36,13 +37,13 @@ parseDict dict = Map.fromList entries
                                                  if k == k' 
                                                     then (k,v':v):kvs
                                                     else (k',[v']):acc
-          packAndParse = (\(x:y:xs) -> (x,y)) . T.splitOn "  "
-          --packAndParse = (\(a,b) -> (T.pack a, T.pack b)) . fst . head . readP_to_S parseLine . T.unpack
+          --packAndParse = (\(x:y:xs) -> (x,y)) . T.splitOn "  "
+          packAndParse = (\(a,b) -> (T.pack a, T.pack b)) . fst . head . readP_to_S parseLine . T.unpack
 
 -- Parses a line in the dictionary, returning as (key,val) pair, ignoring
 -- parenthetical part if it exists
 parseLine :: ReadP (String, String)
-parseLine = (,) <$> (many . satisfy $ (/='(')) <* optional paren <* string "  "
+parseLine = (,) <$> (many get) <* (paren <++ string "") <* string "  "
                 <*> (munch . const $ True)
 
 paren :: ReadP String
