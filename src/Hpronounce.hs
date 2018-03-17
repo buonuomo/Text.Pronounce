@@ -5,12 +5,12 @@ module Hpronounce where
 -- | A module for interpreting parsed CMU dict, modelled after Allison Parrish's
 -- python library pronouncing
 
-import Prelude hiding (length,unwords,words,last)
+import Prelude 
 import ParseDict
 import Data.Maybe (maybeToList)
 import Control.Monad.Reader
 import Data.Char
-import Data.Text as T hiding (concat,reverse,takeWhile,any)
+import qualified Data.Text as T
 import qualified Data.Map as Map
 
 -- | We are using the Reader monad to perform computations in the context of the
@@ -18,36 +18,33 @@ import qualified Data.Map as Map
 type DictComp = Reader CMUdict 
 
 -- | Convenient type aliases for transcription and entry
-type EntryWord = Text
-type Phones = Text
-type Stress = Text
+type EntryWord = T.Text
+type Phones = T.Text
+type Stress = T.Text
 
 phonesForEntry :: EntryWord -> DictComp [Phones]
---phoneForEntry word = lift $ Map.lookup
 phonesForEntry = (concat <$>) . (asks . Map.lookup)
 --phonesForEntry = fmap (concat . maybeToList) . asks . Map.lookup
 
 stressesForEntry :: EntryWord -> DictComp [Stress]
 stressesForEntry = (fmap stresses <$>) . phonesForEntry 
---stressesForEntry = fmap (fmap stresses) . phonesForEntry
--- stressesForEntry = asks . ((.) (fmap (fmap stresses)) . Map.lookup) 
--- stressesForEntry = fmap (fmap (fmap stresses)) phonesForEntry
+
 stresses :: Phones -> Stress
 stresses = T.filter isDigit
 
 syllablesCount :: Phones -> Int
-syllablesCount = length . stresses
+syllablesCount = T.length . stresses
 
 -- | Finds the rhyming part of the given phones. NOTE: I don't like the current
 -- implementation. It's kind of clunky - Fix it 
 rhymingPart :: Phones -> Phones
-rhymingPart = unwords . reverse . takeWhileInc (not . (`isInfixOf` "12") . singleton . last) . reverse . words
+rhymingPart = T.unwords . reverse . takeWhileInc (not . (`T.isInfixOf` "12") . T.singleton . T.last) . reverse . T.words
     where takeWhileInc _ [] = []
           takeWhileInc p (x:xs) = x : if p x then takeWhileInc p xs else []
 
 {- TO DO: Generalize the pattern in these functions -}
 search :: Phones -> DictComp [EntryWord]
-search subphones = asks $ Map.keys . Map.filter (or . fmap (isInfixOf subphones)) 
+search subphones = asks $ Map.keys . Map.filter (or . fmap (T.isInfixOf subphones)) 
 
 searchStresses :: Stress -> DictComp [EntryWord]
 searchStresses stressp = asks $ Map.keys . Map.filter (or . fmap ((== stressp) . stresses))
@@ -57,15 +54,17 @@ rhymes word = do
     dict <- ask
     let rhymeE = runReader (rhymesForEntry word) dict
         res = Map.filter (\x -> or $ (==) <$> rhymeE <*> fmap rhymingPart x) dict
-    return $ Prelude.filter (/= word) $ Map.keys res
+    return $ filter (/= word) $ Map.keys res
         where rhymesForEntry = (fmap rhymingPart <$>) . phonesForEntry
---rhymes word = asks $ Map.keys . Map.filter (\x -> asks $ runReader $ fmap or (fmap (fmap ((== (rhymingPart x)) . rhymingPart)) (stressesForEntry word)))
-{-
-rhymes :: EntryWord -> DictComp [EntryWord]
-rhymes word = asks $ \dict -> do 
-    entryRhymes <- runReader (fmap (fmap rhymingPart) . phonesForEntry $ word) dict
-    vals <- Map.elems dict
-    vals' <- vals
-    guard (rhymingPart entryRhymes == rhymingPart vals')
-    return vals'
--}
+
+
+infixl 3 <||>
+-- | Useful for nondeterministically combining several dictionary computations
+dictAppend, (<||>) :: (Applicative f, Monoid a) => DictComp (f a) -> DictComp (f a) -> DictComp (f a)
+dictAppend = ((<*>) . fmap ((<*>) . fmap mappend))
+(<||>) = dictAppend
+
+-- | Lift functions to act on elements within a functor in a dictionary
+-- computation, such as a list of possible phones or stresses
+liftD :: (Functor f) => (a -> b) -> DictComp (f a) -> DictComp (f b)
+liftD = fmap . fmap
