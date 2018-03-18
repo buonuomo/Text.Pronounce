@@ -27,13 +27,13 @@ initDict path = case path of
                       dict <- T.readFile p
                       return $ parseDict dict
                   Nothing -> do
-                      dictPath <- getDataFileName "cmudict.txt"
+                      dictPath <- getDataFileName "cmuutf"
                       dict <- T.readFile dictPath
                       return $ parseDict dict
                       
 -- | Go through all the entries in the dictionary, parsing, and inserting into
 -- the map data structure
-parseDict :: T.Text-> CMUdict
+parseDict :: T.Text -> CMUdict
 parseDict = Map.fromListWith (++) . map packAndParse . filter ((/= ';') . T.head) . T.lines
     where packAndParse = (\(a,b) -> (T.pack a, [T.pack b])) . fst . head . readP_to_S parseLine . T.unpack
 

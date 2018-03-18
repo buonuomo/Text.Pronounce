@@ -45,7 +45,7 @@ build-type:          Simple
 -- README.
 extra-source-files:  ChangeLog.md README.md test/Test.hs
 
-data-files:          cmudict.txt
+data-files:          cmuutf
 
 -- Constraint on the version of Cabal needed to build this package.
 cabal-version:       >=1.10
