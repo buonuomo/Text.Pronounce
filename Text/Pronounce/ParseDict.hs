@@ -27,7 +27,7 @@ initDict path = case path of
                       dict <- T.readFile p
                       return $ parseDict dict
                   Nothing -> do
-                      dictPath <- getDataFileName "cmudict-0.7b"
+                      dictPath <- getDataFileName "cmudict.txt"
                       dict <- T.readFile dictPath
                       return $ parseDict dict
                       
