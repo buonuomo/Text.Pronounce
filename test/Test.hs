@@ -4,8 +4,8 @@ module IambicLine where
 
 -- | A test for the pronouncing API
 
-import Hpronounce
-import ParseDict
+import Text.Pronounce
+import Text.Pronounce.ParseDict
 import Control.Monad.Reader
 import qualified Data.Text as T
 

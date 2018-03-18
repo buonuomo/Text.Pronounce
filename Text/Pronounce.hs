@@ -1,13 +1,28 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Hpronounce where
+module Text.Pronounce 
+    ( DictComp
+    , EntryWord
+    , Phones
+    , Stress
+    , phonesForEntry
+    , stressesForEntry
+    , stresses
+    , syllableCount
+    , rhymingPart
+    , search
+    , searchStresses
+    , rhymes
+    , dictAppend
+    , (<||>)
+    , liftD
+    , runPronounce
+    ) where
 
 -- | A module for interpreting parsed CMU dict, modelled after Allison Parrish's
 -- python library pronouncing
 
-import Prelude 
-import ParseDict
-import Data.Maybe (maybeToList)
+import Text.Pronounce.ParseDict
 import Control.Monad.Reader
 import Data.Char
 import qualified Data.Text as T
@@ -32,8 +47,8 @@ stressesForEntry = liftD stresses . phonesForEntry
 stresses :: Phones -> Stress
 stresses = T.filter isDigit
 
-syllablesCount :: Phones -> Int
-syllablesCount = T.length . stresses
+syllableCount :: Phones -> Int
+syllableCount = T.length . stresses
 
 -- | Finds the rhyming part of the given phones. NOTE: I don't like the current
 -- implementation. It's kind of clunky - Fix it 
