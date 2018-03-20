@@ -1,7 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Text.Pronounce 
-    ( DictComp
+    ( CMUdict
+    , initDict
+    , DictComp
     , EntryWord
     , Phones
     , Stress
@@ -39,7 +41,6 @@ type Stress = T.Text
 
 phonesForEntry :: EntryWord -> DictComp [Phones]
 phonesForEntry = fmap concat . asks . Map.lookup
---phonesForEntry = fmap (concat . maybeToList) . asks . Map.lookup
 
 stressesForEntry :: EntryWord -> DictComp [Stress]
 stressesForEntry = liftD stresses . phonesForEntry 
@@ -59,19 +60,20 @@ rhymingPart = T.unwords . reverse . takeWhileInc (not . (`T.isInfixOf` "12") . T
 
 {- TO DO: Generalize the pattern in these functions -}
 search :: Phones -> DictComp [EntryWord]
-search subphones = asks $ Map.keys . Map.filter (or . fmap (T.isInfixOf subphones)) 
+search = fmap Map.keys . asks . Map.filter . any . T.isInfixOf
 
 searchStresses :: Stress -> DictComp [EntryWord]
-searchStresses stressp = asks $ Map.keys . Map.filter (or . fmap ((== stressp) . stresses))
+searchStresses = fmap Map.keys . asks . Map.filter . any . (==) . stresses
 
+-- | Given a word, finds all other words that rhyme with it
 rhymes :: EntryWord -> DictComp [EntryWord]
-rhymes word = do
-    dict <- ask
-    let rhymeE = runReader (rhymesForEntry word) dict
-        res = Map.filter (\x -> or $ (==) <$> rhymeE <*> fmap rhymingPart x) dict
-    return $ filter (/= word) $ Map.keys res
-        where rhymesForEntry = (fmap rhymingPart <$>) . phonesForEntry
-
+rhymes word = (\entryPart -> fmap (filter (/= word) . Map.keys) 
+                           . return 
+                           . Map.filter (or . ((==) <$> entryPart <*>) . fmap rhymingPart) 
+                         =<< ask
+              ) =<< (liftD rhymingPart . phonesForEntry $ word)
+    
+    
 
 infixl 3 <||>
 -- | Useful for nondeterministically combining several dictionary computations

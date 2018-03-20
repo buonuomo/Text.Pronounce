@@ -3,6 +3,8 @@
 module Text.Pronounce.ParseDict 
     ( CMUdict
     , initDict
+    , parseDict
+    , parseLine
     ) where
 
 -- | A module for parsing the CMU Pronouncing Dictionary
