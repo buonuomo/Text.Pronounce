@@ -22,7 +22,8 @@ import qualified Data.Map as Map
 type CMUdict = Map.Map T.Text [T.Text]
 
 -- | Initializes the cmu pronunctiation dictionary into our program, given an
--- optional file name of the dictionary
+-- optional file name of the dictionary (defaults to "cmuutf", the utf-8 encoded
+-- text file provided with the library
 initDict :: Maybe FilePath -> IO CMUdict
 initDict path = case path of 
                   Just p -> do
@@ -33,13 +34,15 @@ initDict path = case path of
                       dict <- T.readFile dictPath
                       return $ parseDict dict
                       
+{- Potentially make parseDict two functions??? -}
+
 -- | Go through all the entries in the dictionary, parsing, and inserting into
 -- the map data structure
 parseDict :: T.Text -> CMUdict
 parseDict = Map.fromListWith (++) . map packAndParse . filter ((/= ';') . T.head) . T.lines
     where packAndParse = (\(a,b) -> (T.pack a, [T.pack b])) . fst . head . readP_to_S parseLine . T.unpack
 
--- Parses a line in the dictionary, returning as (key,val) pair, ignoring
+-- | Parses a line in the dictionary, returning as (key,val) pair, ignoring
 -- parenthetical part if it exists
 parseLine :: ReadP (String, String)
 parseLine = (,) <$> (many get) <* (paren <++ string "") <* string "  "

@@ -39,15 +39,20 @@ type EntryWord = T.Text
 type Phones = T.Text
 type Stress = T.Text
 
+-- | Look up the pronunciation (list of possible phones) of a word in the
+-- dictionary
 phonesForEntry :: EntryWord -> DictComp [Phones]
 phonesForEntry = fmap concat . asks . Map.lookup
 
+-- | Gives the stress pattern for a given word in the dictionary
 stressesForEntry :: EntryWord -> DictComp [Stress]
 stressesForEntry = liftD stresses . phonesForEntry 
 
+-- | Isolates the stress pattern from a sequence of phones
 stresses :: Phones -> Stress
 stresses = T.filter isDigit
 
+-- | Gives the syllable count of a given pronunciation
 syllableCount :: Phones -> Int
 syllableCount = T.length . stresses
 
@@ -59,9 +64,12 @@ rhymingPart = T.unwords . reverse . takeWhileInc (not . (`T.isInfixOf` "12") . T
           takeWhileInc p (x:xs) = x : if p x then takeWhileInc p xs else []
 
 {- TO DO: Generalize the pattern in these functions -}
+-- | Given a sequence of phones, find all words that contain that sequence of
+-- phones
 search :: Phones -> DictComp [EntryWord]
 search = fmap Map.keys . asks . Map.filter . any . T.isInfixOf
 
+-- | Given a stress pattern, find all words that satisfy that pattern
 searchStresses :: Stress -> DictComp [EntryWord]
 searchStresses = fmap Map.keys . asks . Map.filter . any . (==) . stresses
 
@@ -73,12 +81,12 @@ rhymes word = (\entryPart -> fmap (filter (/= word) . Map.keys)
                          =<< ask
               ) =<< (liftD rhymingPart . phonesForEntry $ word)
     
-    
-
-infixl 3 <||>
--- | Useful for nondeterministically combining several dictionary computations
+-- | Useful for nondeterministically combining several dictionary computations.
+-- Generally, one would call foldr1 (<||>) to get all the possible results of
+-- mapping a DictComp over a line of text (multiple words).
 dictAppend, (<||>) :: (Applicative f, Monoid a) => DictComp (f a) -> DictComp (f a) -> DictComp (f a)
 dictAppend = ((<*>) . fmap ((<*>) . fmap mappend))
+infixl 3 <||>
 (<||>) = dictAppend
 
 -- | Lift functions to act on elements within a functor in a dictionary
@@ -86,5 +94,7 @@ dictAppend = ((<*>) . fmap ((<*>) . fmap mappend))
 liftD :: (Functor f) => (a -> b) -> DictComp (f a) -> DictComp (f b)
 liftD = fmap . fmap
 
+-- | Get the value from a series of Dictionary Computations by supplying the
+-- dictionary to the computation. This is just runReader.
 runPronounce :: DictComp a -> CMUdict -> a
 runPronounce = runReader
