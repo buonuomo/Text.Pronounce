@@ -1,13 +1,23 @@
 {-# LANGUAGE OverloadedStrings #-}
 
+{-|
+Module      : Text.Pronounce.ParseDict
+Description : Module for parsing the CMU Dictionary
+Copyright   : (c) Noah Goodman, 2018
+License     : BSD3
+Stability   : experimental
+
+This module has functions for parsing the CMU pronouncing dictionary, and exports the 
+@CMUdict@ type and the function @initDict@ to the main module "Text.Pronounce"
+-}
+
+
 module Text.Pronounce.ParseDict 
     ( CMUdict
     , initDict
     , parseDict
     , parseLine
     ) where
-
--- | A module for parsing the CMU Pronouncing Dictionary
 
 import Paths_pronounce
 import System.FilePath

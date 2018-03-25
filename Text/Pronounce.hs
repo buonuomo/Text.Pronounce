@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 {-|
-Module      : Pronounce
+Module      : Text.Pronounce
 Description : A library for interfacing with the CMU Pronouncing Dictionary
 Copyright   : (c) Noah Goodman, 2018
 License     : BSD3
@@ -37,9 +37,6 @@ module Text.Pronounce (
     , (<||>)
     , liftD
     ) where
-
--- | A module for interpreting parsed CMU dict, modelled after Allison Parrish's
--- python library pronouncing
 
 import Text.Pronounce.ParseDict
 import Control.Monad.Reader
