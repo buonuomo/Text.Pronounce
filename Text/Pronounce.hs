@@ -1,24 +1,41 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Text.Pronounce 
-    ( CMUdict
-    , initDict
+{-|
+Module      : Pronounce
+Description : A library for interfacing with the CMU Pronouncing Dictionary
+Copyright   : (c) Noah Goodman, 2018
+License     : BSD3
+Stability   : experimental
+
+This is a library for interpresting the parsed Carnegie Mellon University Pronouncing 
+Dictionary. It is modelled after Allison Parrish's python library, pronouncing.
+-}
+module Text.Pronounce ( 
+    -- * Datatypes
+      CMUdict
     , DictComp
     , EntryWord
     , Phones
     , Stress
+    -- * Using Text.Pronounce
+    , initDict
+    , runPronounce
+    -- * Basic Functions
     , phonesForEntry
     , stressesForEntry
     , stresses
     , syllableCount
-    , rhymingPart
+    -- * Searching the Dictionary
+    , searchDictBy
     , search
     , searchStresses
+    -- * Rhyming
+    , rhymingPart
     , rhymes
+    -- * Some Helper Functions
     , dictAppend
     , (<||>)
     , liftD
-    , runPronounce
     ) where
 
 -- | A module for interpreting parsed CMU dict, modelled after Allison Parrish's
@@ -26,7 +43,7 @@ module Text.Pronounce
 
 import Text.Pronounce.ParseDict
 import Control.Monad.Reader
-import Data.Char
+import Data.Char (isDigit)
 import qualified Data.Text as T
 import qualified Data.Map as Map
 
@@ -59,19 +76,28 @@ syllableCount = T.length . stresses
 -- | Finds the rhyming part of the given phones. NOTE: I don't like the current
 -- implementation. It's kind of clunky - Fix it 
 rhymingPart :: Phones -> Phones
-rhymingPart = T.unwords . reverse . takeWhileInc (not . (`T.isInfixOf` "12") . T.singleton . T.last) . reverse . T.words
+rhymingPart = T.unwords 
+            . reverse 
+            . takeWhileInc (not . (`T.isInfixOf` "12") . T.singleton . T.last) 
+            . reverse 
+            . T.words
     where takeWhileInc _ [] = []
           takeWhileInc p (x:xs) = x : if p x then takeWhileInc p xs else []
 
-{- TO DO: Generalize the pattern in these functions -}
+-- | Initializes a dictionary computation based on a selector function that
+-- operates on an individual phones. It returns a DictComp containing a CMUdict
+-- of all the entries that have at least one value satisfying the predicate.
+searchDictBy :: (Phones -> Bool) -> DictComp CMUdict
+searchDictBy = asks . Map.filter . any
+
 -- | Given a sequence of phones, find all words that contain that sequence of
 -- phones
 search :: Phones -> DictComp [EntryWord]
-search = fmap Map.keys . asks . Map.filter . any . T.isInfixOf
+search = fmap Map.keys . searchDictBy . T.isInfixOf
 
 -- | Given a stress pattern, find all words that satisfy that pattern
 searchStresses :: Stress -> DictComp [EntryWord]
-searchStresses = fmap Map.keys . asks . Map.filter . any . (==) . stresses
+searchStresses = fmap Map.keys . searchDictBy . (==) . stresses
 
 -- | Given a word, finds all other words that rhyme with it
 rhymes :: EntryWord -> DictComp [EntryWord]
