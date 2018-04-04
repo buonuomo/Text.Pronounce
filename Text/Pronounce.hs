@@ -8,7 +8,7 @@ License     : BSD3
 Stability   : experimental
 
 This is a library for interpresting the parsed Carnegie Mellon University Pronouncing 
-Dictionary. It is modelled after Allison Parrish's python library, pronouncing.
+Dictionary. It is modelled after Allison Parrish's python library, @pronouncing@.
 -}
 module Text.Pronounce ( 
     -- * Datatypes
@@ -70,8 +70,7 @@ stresses = T.filter isDigit
 syllableCount :: Phones -> Int
 syllableCount = T.length . stresses
 
--- | Finds the rhyming part of the given phones. NOTE: I don't like the current
--- implementation. It's kind of clunky - Fix it 
+-- | Finds the rhyming part of the given phones. 
 rhymingPart :: Phones -> Phones
 rhymingPart = T.unwords 
             . reverse 
@@ -82,7 +81,7 @@ rhymingPart = T.unwords
           takeWhileInc p (x:xs) = x : if p x then takeWhileInc p xs else []
 
 -- | Initializes a dictionary computation based on a selector function that
--- operates on an individual phones. It returns a DictComp containing a CMUdict
+-- operates on an individual phones. It returns a @DictComp@ containing a @CMUdict@
 -- of all the entries that have at least one value satisfying the predicate.
 searchDictBy :: (Phones -> Bool) -> DictComp CMUdict
 searchDictBy = asks . Map.filter . any
@@ -105,8 +104,8 @@ rhymes word = (\entryPart -> fmap (filter (/= word) . Map.keys)
               ) =<< (liftD rhymingPart . phonesForEntry $ word)
     
 -- | Useful for nondeterministically combining several dictionary computations.
--- Generally, one would call foldr1 (<||>) to get all the possible results of
--- mapping a DictComp over a line of text (multiple words).
+-- Generally, one would call @foldr1 (\<||\>)@ to get all the possible results of
+-- mapping a @DictComp@ over a line of text (multiple words).
 dictAppend, (<||>) :: (Applicative f, Monoid a) => DictComp (f a) -> DictComp (f a) -> DictComp (f a)
 dictAppend = ((<*>) . fmap ((<*>) . fmap mappend))
 infixl 3 <||>
@@ -118,6 +117,6 @@ liftD :: (Functor f) => (a -> b) -> DictComp (f a) -> DictComp (f b)
 liftD = fmap . fmap
 
 -- | Get the value from a series of Dictionary Computations by supplying the
--- dictionary to the computation. This is just runReader.
+-- dictionary to the computation. This is just @runReader@.
 runPronounce :: DictComp a -> CMUdict -> a
 runPronounce = runReader

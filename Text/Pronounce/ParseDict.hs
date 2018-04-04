@@ -33,7 +33,7 @@ type CMUdict = Map.Map T.Text [T.Text]
 
 -- | Initializes the cmu pronunctiation dictionary into our program, given an
 -- optional file name of the dictionary (defaults to "cmuutf", the utf-8 encoded
--- text file provided with the library
+-- text file provided with the library)
 initDict :: Maybe FilePath -> IO CMUdict
 initDict path = case path of 
                   Just p -> do
