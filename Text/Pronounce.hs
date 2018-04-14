@@ -1,32 +1,46 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Text.Pronounce 
-    ( CMUdict
-    , initDict
+{-|
+Module      : Text.Pronounce
+Description : A library for interfacing with the CMU Pronouncing Dictionary
+Copyright   : (c) Noah Goodman, 2018
+License     : BSD3
+Stability   : experimental
+
+This is a library for interpresting the parsed Carnegie Mellon University Pronouncing 
+Dictionary. It is modelled after Allison Parrish's python library, @pronouncing@.
+-}
+module Text.Pronounce ( 
+    -- * Datatypes
+      CMUdict
     , DictComp
     , EntryWord
     , Phones
     , Stress
+    -- * Using Text.Pronounce
+    , initDict
+    , runPronounce
+    -- * Basic Functions
     , phonesForEntry
     , stressesForEntry
     , stresses
     , syllableCount
-    , rhymingPart
+    -- * Searching the Dictionary
+    , searchDictBy
     , search
     , searchStresses
+    -- * Rhyming
+    , rhymingPart
     , rhymes
+    -- * Some Helper Functions
     , dictAppend
     , (<||>)
     , liftD
-    , runPronounce
     ) where
-
--- | A module for interpreting parsed CMU dict, modelled after Allison Parrish's
--- python library pronouncing
 
 import Text.Pronounce.ParseDict
 import Control.Monad.Reader
-import Data.Char
+import Data.Char (isDigit)
 import qualified Data.Text as T
 import qualified Data.Map as Map
 
@@ -39,31 +53,47 @@ type EntryWord = T.Text
 type Phones = T.Text
 type Stress = T.Text
 
+-- | Look up the pronunciation (list of possible phones) of a word in the
+-- dictionary
 phonesForEntry :: EntryWord -> DictComp [Phones]
 phonesForEntry = fmap concat . asks . Map.lookup
 
+-- | Gives the stress pattern for a given word in the dictionary
 stressesForEntry :: EntryWord -> DictComp [Stress]
 stressesForEntry = liftD stresses . phonesForEntry 
 
+-- | Isolates the stress pattern from a sequence of phones
 stresses :: Phones -> Stress
 stresses = T.filter isDigit
 
+-- | Gives the syllable count of a given pronunciation
 syllableCount :: Phones -> Int
 syllableCount = T.length . stresses
 
--- | Finds the rhyming part of the given phones. NOTE: I don't like the current
--- implementation. It's kind of clunky - Fix it 
+-- | Finds the rhyming part of the given phones. 
 rhymingPart :: Phones -> Phones
-rhymingPart = T.unwords . reverse . takeWhileInc (not . (`T.isInfixOf` "12") . T.singleton . T.last) . reverse . T.words
+rhymingPart = T.unwords 
+            . reverse 
+            . takeWhileInc (not . (`T.isInfixOf` "12") . T.singleton . T.last) 
+            . reverse 
+            . T.words
     where takeWhileInc _ [] = []
           takeWhileInc p (x:xs) = x : if p x then takeWhileInc p xs else []
 
-{- TO DO: Generalize the pattern in these functions -}
-search :: Phones -> DictComp [EntryWord]
-search = fmap Map.keys . asks . Map.filter . any . T.isInfixOf
+-- | Initializes a dictionary computation based on a selector function that
+-- operates on an individual phones. It returns a @DictComp@ containing a @CMUdict@
+-- of all the entries that have at least one value satisfying the predicate.
+searchDictBy :: (Phones -> Bool) -> DictComp CMUdict
+searchDictBy = asks . Map.filter . any
 
+-- | Given a sequence of phones, find all words that contain that sequence of
+-- phones
+search :: Phones -> DictComp [EntryWord]
+search = fmap Map.keys . searchDictBy . T.isInfixOf
+
+-- | Given a stress pattern, find all words that satisfy that pattern
 searchStresses :: Stress -> DictComp [EntryWord]
-searchStresses = fmap Map.keys . asks . Map.filter . any . (==) . stresses
+searchStresses = fmap Map.keys . searchDictBy . (==) . stresses
 
 -- | Given a word, finds all other words that rhyme with it
 rhymes :: EntryWord -> DictComp [EntryWord]
@@ -73,12 +103,12 @@ rhymes word = (\entryPart -> fmap (filter (/= word) . Map.keys)
                          =<< ask
               ) =<< (liftD rhymingPart . phonesForEntry $ word)
     
-    
-
-infixl 3 <||>
--- | Useful for nondeterministically combining several dictionary computations
+-- | Useful for nondeterministically combining several dictionary computations.
+-- Generally, one would call @foldr1 (\<||\>)@ to get all the possible results of
+-- mapping a @DictComp@ over a line of text (multiple words).
 dictAppend, (<||>) :: (Applicative f, Monoid a) => DictComp (f a) -> DictComp (f a) -> DictComp (f a)
 dictAppend = ((<*>) . fmap ((<*>) . fmap mappend))
+infixl 3 <||>
 (<||>) = dictAppend
 
 -- | Lift functions to act on elements within a functor in a dictionary
@@ -86,5 +116,7 @@ dictAppend = ((<*>) . fmap ((<*>) . fmap mappend))
 liftD :: (Functor f) => (a -> b) -> DictComp (f a) -> DictComp (f b)
 liftD = fmap . fmap
 
+-- | Get the value from a series of Dictionary Computations by supplying the
+-- dictionary to the computation. This is just @runReader@.
 runPronounce :: DictComp a -> CMUdict -> a
 runPronounce = runReader

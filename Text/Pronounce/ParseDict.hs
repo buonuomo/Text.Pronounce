@@ -1,6 +1,18 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE LambdaCase #-}
 
+{-|
+Module      : Text.Pronounce.ParseDict
+Description : Module for parsing the CMU Dictionary
+Copyright   : (c) Noah Goodman, 2018
+License     : BSD3
+Stability   : experimental
+
+This module has functions for parsing the CMU pronouncing dictionary, and exports the 
+@CMUdict@ type and the function @initDict@ to the main module "Text.Pronounce"
+-}
+
+
 module Text.Pronounce.ParseDict 
     ( CMUdict
     , UsesBin
@@ -9,8 +21,6 @@ module Text.Pronounce.ParseDict
     , parseDict
     , parseLine
     ) where
-
--- | A module for parsing the CMU Pronouncing Dictionary
 
 import Paths_pronounce
 import System.FilePath
@@ -57,7 +67,7 @@ parseDict :: T.Text -> CMUdict
 parseDict = Map.fromListWith (++) . map packAndParse . filter ((/= ';') . T.head) . T.lines
     where packAndParse = (\(a,b) -> (T.pack a, [T.pack b])) . fst . head . readP_to_S parseLine . T.unpack
 
--- Parses a line in the dictionary, returning as (key,val) pair, ignoring
+-- | Parses a line in the dictionary, returning as (key,val) pair, ignoring
 -- parenthetical part if it exists
 parseLine :: ReadP (String, String)
 parseLine = (,) <$> (many get) <* (paren <++ string "") <* string "  "
