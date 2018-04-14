@@ -13,12 +13,14 @@ Dictionary. It is modelled after Allison Parrish's python library, @pronouncing@
 module Text.Pronounce ( 
     -- * Datatypes
       CMUdict
+    , UsesBin
     , DictComp
     , EntryWord
     , Phones
     , Stress
     -- * Using Text.Pronounce
     , initDict
+    , stdDict
     , runPronounce
     -- * Basic Functions
     , phonesForEntry
