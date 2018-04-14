@@ -27,7 +27,7 @@ isIambicLine = fmap (any isIambic)
 main :: IO ()
 main = do 
     putStrLn "Type something, and I'll tell you if it's in iambic meter..."
-    dict <- initDict Nothing 
+    dict <- stdDict
     runInputT defaultSettings (loop dict)
         where
             loop :: CMUdict -> InputT IO ()

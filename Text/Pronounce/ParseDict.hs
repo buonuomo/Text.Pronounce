@@ -1,8 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE LambdaCase #-}
 
 module Text.Pronounce.ParseDict 
     ( CMUdict
+    , UsesBin
     , initDict
+    , stdDict
     , parseDict
     , parseLine
     ) where
@@ -13,6 +16,8 @@ import Paths_pronounce
 import System.FilePath
 import Text.ParserCombinators.ReadP
 import Data.Char
+import Data.Text.Encoding
+import Data.Binary (decodeFile)
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Data.Map as Map
@@ -21,18 +26,31 @@ import qualified Data.Map as Map
 -- representation of the CMU Pronouncing Dictionary
 type CMUdict = Map.Map T.Text [T.Text]
 
+-- | A type used to represent the option of decoding the dictionary from a
+-- binary file or parsing it from text
+type UsesBin = Bool
+
 -- | Initializes the cmu pronunctiation dictionary into our program, given an
 -- optional file name of the dictionary
-initDict :: Maybe FilePath -> IO CMUdict
-initDict path = case path of 
-                  Just p -> do
-                      dict <- T.readFile p
-                      return $ parseDict dict
-                  Nothing -> do
-                      dictPath <- getDataFileName "cmuutf"
-                      dict <- T.readFile dictPath
-                      return $ parseDict dict
-                      
+initDict :: Maybe FilePath -> UsesBin -> IO CMUdict
+initDict path = \case
+    True ->
+        case path of 
+          Just p ->
+              return . Map.mapKeys decodeUtf8 . fmap (map decodeUtf8) =<< decodeFile p
+          Nothing ->
+              return . Map.mapKeys decodeUtf8 . fmap (map decodeUtf8) =<< decodeFile =<< getDataFileName "cmubin"
+    False ->
+        case path of 
+          Just p -> 
+              return . parseDict =<< T.readFile p
+          Nothing -> 
+              return . parseDict =<< T.readFile =<< getDataFileName "cmuutf"
+
+-- | Default settings for initDict
+stdDict :: IO CMUdict
+stdDict = initDict Nothing True
+
 -- | Go through all the entries in the dictionary, parsing, and inserting into
 -- the map data structure
 parseDict :: T.Text -> CMUdict
