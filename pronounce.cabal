@@ -10,7 +10,7 @@ name:                pronounce
 -- PVP summary:      +-+------- breaking API changes
 --                   | | +----- non-breaking API additions
 --                   | | | +--- code changes with no API change
-version:             0.1.0.0
+version:             1.1.0.0
 
 -- A short (one-line) description of the package.
 synopsis:            A Haskell library for interfacing with the CMU Pronouncing Dictionary
@@ -43,7 +43,7 @@ build-type:          Simple
 
 -- Extra files to be distributed with the package, such as examples or a 
 -- README.
-extra-source-files:  ChangeLog.md README.md test/Test.hs
+extra-source-files:  ChangeLog.md README.md examples/*
 
 data-files:          cmuutf, cmubin
 
