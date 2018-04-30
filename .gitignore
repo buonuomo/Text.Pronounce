@@ -3,3 +3,4 @@ Paths_pronounce.hs
 dist/*
 cmulatin1
 *.swp
+*.tar.gz

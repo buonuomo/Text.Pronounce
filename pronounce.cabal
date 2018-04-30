@@ -16,7 +16,19 @@ version:             1.1.0.1
 synopsis:            A Haskell library for interfacing with the CMU Pronouncing Dictionary
 
 -- A longer description of the package.
--- description:         
+description:         Text.Pronounce is a Haskell library for interfacing and
+                     CMU Pronouncing Dictionary. It is based off of Allison
+                     Parrish's python library called 'pronouncing', and it
+                     exports much of the same functionality. The underlying data
+                     structure that I used for representing the dictionary was a
+                     Map from entries to lists of their possible phones as
+                     represented in the CMU dict. Many functions rely on access
+                     to the CMU dict, so I decided to encompass this underlying
+                     state of the dictionary by using the Reader Monad. When
+                     working with this library, the default setting is to load
+                     the dictionary from an included binary file, but the user
+                     has the option to parse the dictionary from a unicode text
+                     file, or encode the text file into binary themselves.
 
 -- URL for the project homepage or repository.
 homepage:            https://github.com/buonuomo/Text.Pronounce
