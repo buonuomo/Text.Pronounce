@@ -14,7 +14,9 @@ This module has functions for parsing the CMU pronouncing dictionary, and export
 
 
 module Text.Pronounce.ParseDict 
-    ( CMUdict
+    ( EntryWord
+    , Phones
+    , CMUdict
     , UsesBin
     , initDict
     , stdDict
@@ -32,9 +34,17 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Data.Map as Map
 
--- | A Map from Entries to lists of possible pronunciations, serving as our
+-- | Represents an entry word in the cmu pronouncing dictionary (simply an alias
+-- for @Text@ to improve type specificity and readability
+type EntryWord = T.Text
+
+-- | Represents a string containing the phonetic breakdown of a word, in a
+-- similar manner to the @EntryWord@ type
+type Phones = T.Text
+
+-- | A Map from @EntryWord@s to lists of possible pronunciations (@Phones@), serving as our
 -- representation of the CMU Pronouncing Dictionary
-type CMUdict = Map.Map T.Text [T.Text]
+type CMUdict = Map.Map EntryWord [Phones]
 
 -- | A type used to represent the option of decoding the dictionary from a
 -- binary file or parsing it from text
@@ -57,7 +67,7 @@ initDict path = \case
           Nothing -> 
               return . parseDict =<< T.readFile =<< getDataFileName "cmuutf"
 
--- | Default settings for initDict
+-- | Default settings for @initDict@
 stdDict :: IO CMUdict
 stdDict = initDict Nothing True
 
@@ -67,7 +77,7 @@ parseDict :: T.Text -> CMUdict
 parseDict = Map.fromListWith (++) . map packAndParse . filter ((/= ';') . T.head) . T.lines
     where packAndParse = (\(a,b) -> (T.pack a, [T.pack b])) . fst . head . readP_to_S parseLine . T.unpack
 
--- | Parses a line in the dictionary, returning as (key,val) pair, ignoring
+-- | Parses a line in the dictionary, returning as @(key,val)@ pair, ignoring
 -- parenthetical part if it exists
 parseLine :: ReadP (String, String)
 parseLine = (,) <$> (many get) <* (paren <++ string "") <* string "  "

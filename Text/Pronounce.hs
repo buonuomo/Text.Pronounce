@@ -50,9 +50,7 @@ import qualified Data.Map as Map
 -- CMU dictionary without having to pass it in or worry about initializing every time
 type DictComp = Reader CMUdict 
 
--- | Convenient type aliases for transcription and entry
-type EntryWord = T.Text
-type Phones = T.Text
+-- | Convenient type aliases for the @Text@ string containing the stress patern of a word
 type Stress = T.Text
 
 -- | Look up the pronunciation (list of possible phones) of a word in the
