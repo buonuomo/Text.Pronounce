@@ -17,7 +17,6 @@ module Text.Pronounce.ParseDict
     ( EntryWord
     , Phones
     , CMUdict
-    , UsesBin
     , initDict
     , stdDict
     , parseDict
@@ -46,14 +45,10 @@ type Phones = T.Text
 -- representation of the CMU Pronouncing Dictionary
 type CMUdict = Map.Map EntryWord [Phones]
 
--- | A type used to represent the option of decoding the dictionary from a
--- binary file or parsing it from text
-type UsesBin = Bool
-
 -- | Initializes the cmu pronunctiation dictionary into our program, given an
 -- optional file name of the dictionary
-initDict :: Maybe FilePath -> UsesBin -> IO CMUdict
-initDict path = \case
+initDict :: Maybe FilePath -> Bool -> IO CMUdict
+initDict path usesBin = case usesBin of
     True ->
         case path of 
           Just p ->
