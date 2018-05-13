@@ -25,7 +25,7 @@ description:         Text.Pronounce is a Haskell library for interfacing and
                      represented in the CMU dict. Many functions rely on access
                      to the CMU dict, so I decided to encompass this underlying
                      state of the dictionary by using the Reader Monad. 
-                     
+                     .
                      When working with this library, the default setting is to load
                      the dictionary from an included binary file, but the user
                      has the option to parse the dictionary from a unicode text
@@ -33,7 +33,7 @@ description:         Text.Pronounce is a Haskell library for interfacing and
                      this last purpose, I included the script I originally used
                      to encode the dictionary into a binary in the @examples@
                      folder. 
-                     
+                     .
                      Finally, I would like to note that
                      @Text.Pronounce.ParseDict@ operates on utf8 encoded files,
                      due to compatibility with @Text@, which is utf encoded,
