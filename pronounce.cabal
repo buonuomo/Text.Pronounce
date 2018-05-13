@@ -10,10 +10,10 @@ name:                pronounce
 -- PVP summary:      +-+------- breaking API changes
 --                   | | +----- non-breaking API additions
 --                   | | | +--- code changes with no API change
-version:             1.1.0.1
+version:             1.1.0.2
 
 -- A short (one-line) description of the package.
-synopsis:            A Haskell library for interfacing with the CMU Pronouncing Dictionary
+synopsis:            A library for interfacing with the CMU Pronouncing Dictionary
 
 -- A longer description of the package.
 description:         Text.Pronounce is a Haskell library for interfacing and
@@ -21,14 +21,27 @@ description:         Text.Pronounce is a Haskell library for interfacing and
                      Parrish's python library called 'pronouncing', and it
                      exports much of the same functionality. The underlying data
                      structure that I used for representing the dictionary was a
-                     Map from entries to lists of their possible phones as
+                     @Map@ from entries to lists of their possible phones as
                      represented in the CMU dict. Many functions rely on access
                      to the CMU dict, so I decided to encompass this underlying
-                     state of the dictionary by using the Reader Monad. When
-                     working with this library, the default setting is to load
+                     state of the dictionary by using the Reader Monad. 
+                     
+                     When working with this library, the default setting is to load
                      the dictionary from an included binary file, but the user
                      has the option to parse the dictionary from a unicode text
-                     file, or encode the text file into binary themselves.
+                     file, or encode the text file into binary themselves. For
+                     this last purpose, I included the script I originally used
+                     to encode the dictionary into a binary in the @examples@
+                     folder. 
+                     
+                     Finally, I would like to note that
+                     @Text.Pronounce.ParseDict@ operates on utf8 encoded files,
+                     due to compatibility with @Text@, which is utf encoded,
+                     despite the fact the original CMU Pronouncing Dictionary
+                     uses latin1 encoding. Because of this, if the user wants to
+                     use a version of the CMU Dictionary other than the included
+                     one, they must change to encoding to utf before parsing.
+                     
 
 -- URL for the project homepage or repository.
 homepage:            https://github.com/buonuomo/Text.Pronounce
@@ -61,6 +74,10 @@ data-files:          cmuutf, cmubin
 
 -- Constraint on the version of Cabal needed to build this package.
 cabal-version:       >=1.10
+
+source-repository head
+  type: git
+  location: https://github.com/buonuomo/Text.Pronounce.git
 
 
 library
