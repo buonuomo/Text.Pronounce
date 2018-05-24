@@ -1,5 +1,6 @@
 # Text.Pronounce
-A pronunciation and rhyming library that uses the CMU Pronouncing Dictionary
+A pronunciation and rhyming library that uses the [CMU Pronouncing
+Dictionary](http://www.speech.cs.cmu.edu/cgi-bin/cmudict)
 
 This package is a basic interface for the Carnegie Mellon University Pronouncing Dictionary, based off of 
 [Allison Parrish's Python API](https://github.com/aparrish/pronouncingpy), `pronouncing`. 
