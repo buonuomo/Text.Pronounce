@@ -10,7 +10,7 @@ name:                pronounce
 -- PVP summary:      +-+------- breaking API changes
 --                   | | +----- non-breaking API additions
 --                   | | | +--- code changes with no API change
-version:             1.1.0.2
+version:             1.1.0.3
 
 -- A short (one-line) description of the package.
 synopsis:            A library for interfacing with the CMU Pronouncing Dictionary
@@ -92,7 +92,12 @@ library
   other-extensions:    OverloadedStrings
   
   -- Other library packages from which modules are imported.
-  build-depends:       base >=4.10 && <4.11, mtl >=2.2 && <2.3, text >=1.2 && <1.3, containers >=0.5 && <0.6, filepath >=1.4 && <1.5, binary >=0.8.4
+  build-depends:       base >=4.10 && <4.12, 
+                       mtl >=2.2 && <2.3,
+                       text >=1.2 && <1.3,
+                       containers >=0.5 && <0.6,
+                       filepath >=1.4 && <1.5,
+                       binary >=0.8.4 && <0.9
   
   -- Directories containing source files.
   -- hs-source-dirs:      
