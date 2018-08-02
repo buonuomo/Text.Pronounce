@@ -18,6 +18,7 @@ module Text.Pronounce (
     , Phones
     , Stress
     -- * Using Text.Pronounce
+    , DictSource
     , initDict
     , stdDict
     , runPronounce

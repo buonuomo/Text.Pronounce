@@ -16,6 +16,7 @@ module Text.Pronounce.ParseDict
     ( EntryWord
     , Phones
     , CMUdict
+    , DictSource
     , initDict
     , stdDict
     , parseDict
@@ -44,17 +45,21 @@ type Phones = T.Text
 -- representation of the CMU Pronouncing Dictionary
 type CMUdict = Map.Map EntryWord [Phones]
 
+-- | Options for the initial source of the CMUDict. Currently, we can either
+-- parse from plaintext file or load preprocessed binary
+data DictSource = PlainText | Binary
+
 -- | Initializes the cmu pronunctiation dictionary into our program, given an
 -- optional file name of the dictionary
-initDict :: Maybe FilePath -> Bool -> IO CMUdict
-initDict path usesBin = case usesBin of
-    True ->
+initDict :: Maybe FilePath -> DictSource -> IO CMUdict
+initDict path dictSource = case dictSource of
+    Binary ->
         case path of 
           Just p ->
               return . Map.mapKeys decodeUtf8 . fmap (map decodeUtf8) =<< decodeFile p
           Nothing ->
               return . Map.mapKeys decodeUtf8 . fmap (map decodeUtf8) =<< decodeFile =<< getDataFileName "cmubin"
-    False ->
+    PlainText ->
         case path of 
           Just p -> 
               return . parseDict =<< T.readFile p
@@ -63,7 +68,7 @@ initDict path usesBin = case usesBin of
 
 -- | Default settings for @initDict@
 stdDict :: IO CMUdict
-stdDict = initDict Nothing True
+stdDict = initDict Nothing Binary
 
 -- | Go through all the entries in the dictionary, parsing, and inserting into
 -- the map data structure

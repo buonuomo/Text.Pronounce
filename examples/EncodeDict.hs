@@ -17,11 +17,11 @@ main = do
     arg <- getArgs
     case arg of 
       [] -> 
-          encodeFile "cmubin" . Map.mapKeys encodeUtf8 . fmap (map encodeUtf8) =<< initDict Nothing False
+          encodeFile "cmubin" . Map.mapKeys encodeUtf8 . fmap (map encodeUtf8) =<< initDict Nothing PlainText
       [dest] -> 
-          encodeFile dest . Map.mapKeys encodeUtf8 . fmap (map encodeUtf8) =<< initDict Nothing False
+          encodeFile dest . Map.mapKeys encodeUtf8 . fmap (map encodeUtf8) =<< initDict Nothing PlainText
       [src,dest] ->
-          encodeFile dest . Map.mapKeys encodeUtf8 . fmap (map encodeUtf8) =<< initDict (Just src) False
+          encodeFile dest . Map.mapKeys encodeUtf8 . fmap (map encodeUtf8) =<< initDict (Just src) PlainText
       _ -> putStrLn "Usage: encodeDict [src] [dest]"
 
 
