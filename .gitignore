@@ -4,3 +4,4 @@ dist/*
 cmulatin1
 *.swp
 *.tar.gz
+*.todo
