@@ -17,9 +17,9 @@ synopsis:            A library for interfacing with the CMU Pronouncing Dictiona
 
 -- A longer description of the package.
 description:         Text.Pronounce is a Haskell library for interfacing and
-                     <http://www.speech.cs.cmu.edu/cgi-bin/cmudict CMU
-                     Pronouncing Dictionary>. It is based off of Allison
-                     Parrish's python library called 'pronouncing', and it
+                     <http://www.speech.cs.cmu.edu/cgi-bin/cmudict CMU Pronouncing Dictionary>.
+                     It is based off of Allison Parrish's 
+                     <https://pypi.org/project/pronouncing/ python library> 'pronouncing', and it
                      exports much of the same functionality. The underlying data
                      structure that I used for representing the dictionary was a
                      @Map@ from entries to lists of their possible phones as
