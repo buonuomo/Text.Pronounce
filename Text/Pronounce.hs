@@ -14,7 +14,7 @@ module Text.Pronounce (
     -- * Datatypes
       CMUdict
     , DictComp
-    , EntryWord
+    , Entry
     , Phones
     , Stress
     -- * Using Text.Pronounce
@@ -40,43 +40,47 @@ module Text.Pronounce (
     , liftD
     ) where
 
-import Text.Pronounce.ParseDict
-import Control.Monad.Reader
-import Data.Char (isDigit)
-import qualified Data.Text as T
+import           Text.Pronounce.ParseDict
+
+import           Control.Monad.Reader
+import           Data.Char (isDigit)
+import           Data.List (isInfixOf)
+import           Data.Map (Map)
 import qualified Data.Map as Map
+import           Data.Maybe (catMaybes)
+import           Data.Text (Text)
+import qualified Data.Text as T
+import           Safe (readMay)
 
 -- | We are using the Reader monad to perform computations in the context of the
 -- CMU dictionary without having to pass it in or worry about initializing every time
 type DictComp = Reader CMUdict 
 
 -- | Convenient type aliases for the @Text@ string containing the stress patern of a word
-type Stress = T.Text
+type Stress = [Int]
 
 -- | Look up the pronunciation (list of possible phones) of a word in the
 -- dictionary
-phonesForEntry :: EntryWord -> DictComp [Phones]
+phonesForEntry :: Entry -> DictComp [Phones]
 phonesForEntry = fmap concat . asks . Map.lookup
 
 -- | Gives the stress pattern for a given word in the dictionary
-stressesForEntry :: EntryWord -> DictComp [Stress]
+stressesForEntry :: Entry -> DictComp [Stress]
 stressesForEntry = liftD stresses . phonesForEntry 
 
 -- | Isolates the stress pattern from a sequence of phones
 stresses :: Phones -> Stress
-stresses = T.filter isDigit
+stresses = catMaybes . fmap (readMay . filter isDigit . T.unpack)
 
 -- | Gives the syllable count of a given pronunciation
 syllableCount :: Phones -> Int
-syllableCount = T.length . stresses
+syllableCount = length . stresses
 
 -- | Finds the rhyming part of the given phones. 
 rhymingPart :: Phones -> Phones
-rhymingPart = T.unwords 
-            . reverse 
+rhymingPart = reverse 
             . takeWhileInc (not . (`T.isInfixOf` "12") . T.singleton . T.last) 
             . reverse 
-            . T.words
     where takeWhileInc _ [] = []
           takeWhileInc p (x:xs) = x : if p x then takeWhileInc p xs else []
 
@@ -88,15 +92,15 @@ searchDictBy = asks . Map.filter . any
 
 -- | Given a sequence of phones, find all words that contain that sequence of
 -- phones
-search :: Phones -> DictComp [EntryWord]
-search = fmap Map.keys . searchDictBy . T.isInfixOf
+search :: Phones -> DictComp [Entry]
+search = fmap Map.keys . searchDictBy . isInfixOf
 
 -- | Given a stress pattern, find all words that satisfy that pattern
-searchStresses :: Stress -> DictComp [EntryWord]
-searchStresses = fmap Map.keys . searchDictBy . (==) . stresses
+searchStresses :: Stress -> DictComp [Entry]
+searchStresses = fmap Map.keys . searchDictBy . flip ((==) . stresses)
 
 -- | Given a word, finds all other words that rhyme with it
-rhymes :: EntryWord -> DictComp [EntryWord]
+rhymes :: Entry -> DictComp [Entry]
 rhymes word = (\entryPart -> fmap (filter (/= word) . Map.keys) 
                            . return 
                            . Map.filter (or . ((==) <$> entryPart <*>) . fmap rhymingPart) 

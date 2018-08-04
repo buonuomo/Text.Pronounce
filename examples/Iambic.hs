@@ -12,8 +12,9 @@ import qualified Data.Text as T
 
 -- | Test if a stress pattern is (loosely) in iambic meter
 isIambic :: Stress -> Bool
-isIambic "" = True
-isIambic xs = ((`elem` ["22","11","21","01","02"]) . T.take 2 $ xs) && isIambic (T.drop 2 xs)
+isIambic [] = True
+isIambic [_] = True
+isIambic (x:y:xs) = [x,y] `elem` [[2,2],[1,1],[2,1],[0,1],[0,2]]  && isIambic xs
 
 -- | Test if a line of text is iambic
 isIambicLine :: T.Text -> DictComp Bool

@@ -13,37 +13,41 @@ This module has functions for parsing the CMU pronouncing dictionary, and export
 
 
 module Text.Pronounce.ParseDict 
-    ( EntryWord
+    ( Entry
     , Phones
     , CMUdict
-    , DictSource
+    , DictSource(..)
     , initDict
     , stdDict
     , parseDict
     , parseLine
     ) where
 
-import Paths_pronounce
-import System.FilePath
-import Text.ParserCombinators.ReadP
-import Data.Char
-import Data.Text.Encoding
-import Data.Binary (decodeFile)
+import           Paths_pronounce
+
+import           Control.Arrow ((***))
+import           Data.Binary (Binary, decodeFile)
+import           Data.Char
+import           Data.Map (Map)
+import qualified Data.Map as Map
+import           Data.Text.Encoding
+import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
-import qualified Data.Map as Map
+import           System.FilePath
+import           Text.ParserCombinators.ReadP
 
 -- | Represents an entry word in the cmu pronouncing dictionary (simply an alias
 -- for @Text@ to improve type specificity and readability
-type EntryWord = T.Text
+type Entry = Text
 
 -- | Represents a string containing the phonetic breakdown of a word, in a
 -- similar manner to the @EntryWord@ type
-type Phones = T.Text
+type Phones = [Text]
 
--- | A Map from @EntryWord@s to lists of possible pronunciations (@Phones@), serving as our
+-- | A Map from @Entry@s to lists of possible pronunciations (@Phones@), serving as our
 -- representation of the CMU Pronouncing Dictionary
-type CMUdict = Map.Map EntryWord [Phones]
+type CMUdict = Map Entry [Phones]
 
 -- | Options for the initial source of the CMUDict. Currently, we can either
 -- parse from plaintext file or load preprocessed binary
@@ -56,9 +60,11 @@ initDict path dictSource = case dictSource of
     Binary ->
         case path of 
           Just p ->
-              return . Map.mapKeys decodeUtf8 . fmap (map decodeUtf8) =<< decodeFile p
+              --return . Map.mapKeys decodeUtf8 . fmap (map decodeUtf8) =<< decodeFile p
+              decodeFile p
           Nothing ->
-              return . Map.mapKeys decodeUtf8 . fmap (map decodeUtf8) =<< decodeFile =<< getDataFileName "cmubin"
+              --return . Map.mapKeys decodeUtf8 . fmap (map decodeUtf8) =<< decodeFile =<< getDataFileName "cmubin"
+              decodeFile =<< getDataFileName "cmubin"
     PlainText ->
         case path of 
           Just p -> 
@@ -74,7 +80,7 @@ stdDict = initDict Nothing Binary
 -- the map data structure
 parseDict :: T.Text -> CMUdict
 parseDict = Map.fromListWith (++) . map packAndParse . filter ((/= ';') . T.head) . T.lines
-    where packAndParse = (\(a,b) -> (T.pack a, [T.pack b])) . fst . head . readP_to_S parseLine . T.unpack
+    where packAndParse = (T.pack *** (:[]) . T.words . T.pack) . fst . head . readP_to_S parseLine . T.unpack
 
 -- | Parses a line in the dictionary, returning as @(key,val)@ pair, ignoring
 -- parenthetical part if it exists
