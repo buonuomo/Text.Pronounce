@@ -14,19 +14,16 @@ import qualified Data.Text as T
 isIambic :: Stress -> Bool
 isIambic [] = True
 isIambic [_] = True
-isIambic (x:y:xs) = [x,y] `elem` [[2,2],[1,1],[2,1],[0,1],[0,2]]  && isIambic xs
+isIambic (x:y:xs) = (x,y) `elem` [(2,2),(1,1),(2,1),(0,1),(0,2)]  && isIambic xs
 
 -- | Test if a line of text is iambic
 isIambicLine :: T.Text -> DictComp Bool
-isIambicLine = fmap (any isIambic)
-             . foldr1 (<||>)
-             . fmap stressesForEntry 
-             . T.words
+isIambicLine = pure . isIambic . concat <=< mapM stressesForEntry . T.words
 
 -- | A simple repl using haskeline that tells us whether or not what we type is
 -- iambic
 main :: IO ()
-main = do 
+main = do
     putStrLn "Type something, and I'll tell you if it's in iambic meter..."
     dict <- stdDict
     runInputT defaultSettings (loop dict)
@@ -34,9 +31,9 @@ main = do
             loop :: CMUdict -> InputT IO ()
             loop cmu = do
                 line <- getInputLine "# "
-                case line of 
+                case line of
                     Nothing -> return ()
                     Just "" -> loop cmu
                     Just input -> do
-                        outputStrLn . show . runPronounce (isIambicLine . T.toUpper . T.pack $ input) $ cmu
+                        outputStrLn . show . or . runPronounce (isIambicLine . T.toUpper . T.pack $ input) $ cmu
                         loop cmu
