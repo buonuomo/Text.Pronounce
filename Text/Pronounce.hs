@@ -1,4 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 {-|
 Module      : Text.Pronounce
@@ -25,10 +27,22 @@ module Text.Pronounce (
     -- * Basic Functions
     , phonesForEntry
     , stressesForEntry
+    , noStress
     , stresses
     , syllableCount
     -- * Searching the Dictionary
-    , searchDictBy
+    -- ** Field Selectors
+    , entries
+    , phones
+    , pairs
+    -- ** Refining a Search
+    , DictField
+    , filterDict
+    , filterComp
+    --, refineDict
+    --, takeAll
+    --, suchThat
+    -- ** Specific searches
     , search
     , searchStresses
     -- * Rhyming
@@ -64,11 +78,15 @@ type Stress = [Int]
 -- | Look up the pronunciation (list of possible phones) of a word in the
 -- dictionary
 phonesForEntry :: Entry -> DictComp Phones
-phonesForEntry word = mapReaderT join $ fmap concat (asks (Map.lookup word))
+phonesForEntry word = ReaderT (concat . Map.lookup word)
 
 -- | Gives the stress pattern for a given word in the dictionary
 stressesForEntry :: Entry -> DictComp Stress
 stressesForEntry = fmap stresses . phonesForEntry
+
+-- | Strips the stress indicating numbers off of a phones
+noStress :: Phones -> Phones
+noStress = fmap (T.filter (not . isDigit))
 
 -- | Isolates the stress pattern from a sequence of phones
 stresses :: Phones -> Stress
@@ -86,25 +104,58 @@ rhymingPart = reverse
     where takeWhileInc _ [] = []
           takeWhileInc p (x:xs) = x : if p x then takeWhileInc p xs else []
 
+class DictField a where
+    filterDict :: (a -> Bool) -> CMUdict -> CMUdict
+
+instance DictField Entry where
+    filterDict = Map.filterWithKey . fmap const
+
+instance DictField Phones where
+    filterDict = Map.filter . any
+
+instance DictField (Entry, Phones) where
+    filterDict = Map.filterWithKey . fmap any . curry
+    
 -- | Initializes a dictionary computation based on a selector function that
 -- operates on an individual phones. It returns a @DictComp@ containing a @CMUdict@
 -- of all the entries that have at least one value satisfying the predicate.
-searchDictBy :: (Phones -> Bool) -> DictComp CMUdict
-searchDictBy = asks . Map.filter . any
+filterComp :: DictField a => (a -> Bool) -> DictComp b -> DictComp b
+filterComp = local . filterDict
+
+-- | Syntactic sugar for the refineDict function, along with @suchThat@
+--takeAll :: DictComp a -> () -> (Phones -> Bool) -> DictComp a
+--takeAll selector _ refiner = refineDict selector refiner
+
+-- | Merely a piece of syntactic sugar to make the takeAll function look nice
+--suchThat :: ()
+--suchThat = ()
+
+-- | A @DictComp@ that simply returns a list of all the entry words in the cmu dict
+entries :: DictComp Entry
+entries = ReaderT Map.keys
+
+-- | A Dictionary Computation that returns a list of all the lists of phones in
+-- the @CMUdict@
+phones :: DictComp [Phones]
+phones = ReaderT Map.elems
+
+-- | A Dictionary Computation that returns a list of all the @(key,value) pairs
+-- in the CMU Dictionary
+pairs :: DictComp (Entry,[Phones])
+pairs = ReaderT Map.toList
 
 -- | Given a sequence of phones, find all words that contain that sequence of
 -- phones
 search :: Phones -> DictComp Entry
-search = mapReaderT join . fmap Map.keys . searchDictBy . isInfixOf
+search subPhones = filterComp (subPhones `isInfixOf`) entries
 
 -- | Given a stress pattern, find all words that satisfy that pattern
 searchStresses :: Stress -> DictComp Entry
-searchStresses = mapReaderT join . fmap Map.keys . searchDictBy . flip ((==) . stresses)
+searchStresses stress = filterComp ((== stress) . stresses) entries
 
 -- | Given a word, finds all other words that rhyme with it
 rhymes :: Entry -> DictComp Entry
-rhymes word = do rhymeParts <- rhymingPart <$> phonesForEntry word
-                 match <- mapReaderT join . fmap Map.keys . searchDictBy $ (\phone -> rhymingPart phone == rhymeParts)
+rhymes word = do rhyme <- rhymingPart <$> phonesForEntry word
+                 match <- filterComp ((== rhyme) . rhymingPart) entries
                  guard (match /= word)
                  return match
-
