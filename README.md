@@ -17,7 +17,7 @@ in the project directory where you would like to use `Text.Pronounce`.
 
 ### Documentation
 A general overview and information about the package can be found on
-[`Text.Pronounce`'s Hackage page](https://hackage.haskell.org/package/pronounce-1.1.0.3)
+[`Text.Pronounce`'s Hackage page](https://hackage.haskell.org/package/pronounce-1.2.0.0)
 
 For basic descriptions of the package's exports, the Haddockumentation 
-can also be found on Hackage at [this address.](https://hackage.haskell.org/package/pronounce-1.1.0.3/docs/Text-Pronounce.html)
+can also be found on Hackage at [this address.](https://hackage.haskell.org/package/pronounce-1.2.0.0/docs/Text-Pronounce.html)
