@@ -53,7 +53,7 @@ module Text.Pronounce (
 
 import           Text.Pronounce.ParseDict
 
-import           Control.Monad.Trans.Reader
+import           Control.Monad.Reader
 import           Control.Monad
 import           Data.Char (isDigit)
 import           Data.Function (on)

@@ -39,12 +39,14 @@ description:         Text.Pronounce is a Haskell library for interfacing and
                      at the ends of vowels. In addition, since some words can
                      have multiple pronunciations, there can be multiple entries
                      for a word:
+                     .
                      > CONSOLE  K AH0 N S OW1 L
                      > CONSOLE(1)  K AA1 N S OW0 L
+                     .
                      Most users need not worry about the actual syntax of the
                      cmu dict; however, and should merely note that such an
                      entry in the @CMUdict@ would consist of the mapping from
-                     the @Entry@ "CONSOLE" to some @[Phones]@, a list of possible
+                     the @Entry@ \"CONSOLE\" to some @[Phones]@, a list of possible
                      sequences of phones for this word (stresses included). For
                      a better description of the actual cmu pronouncing
                      dictionary, I recommend visiting
