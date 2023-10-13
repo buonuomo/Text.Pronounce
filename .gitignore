@@ -1,6 +1,7 @@
 pp.hs
 Paths_pronounce.hs
 dist/*
+dist-newstyle/*
 cmulatin1
 *.swp
 *.tar.gz
